@@ -1,8 +1,8 @@
-# Drishti AI 👁️
+# Netra AI 👁️
 
 **An AI-powered bilingual visual assistant for visually impaired people.**
 
-Drishti AI is a web-based application that helps visually impaired individuals understand their surroundings through a camera and voice interaction.
+Netra AI is a web-based application that helps visually impaired individuals understand their surroundings through a camera and voice interaction.
 
 ### Planned Features
 - Real-time camera access
