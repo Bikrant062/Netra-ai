@@ -203,3 +203,88 @@ function stopFrameBuffer() {
   bufferTimer = null;
   recentFrames = [];
 }
+// ---------- Voice input ----------
+const voiceBtn = document.getElementById("voiceBtn");
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const RECOGNITION_LANG = { en: "en-IN", ne: "ne-NP" }; // en-US is the alternative for English
+let recognition = null;
+let listening = false;
+
+function voiceErrorMessage(code) {
+  switch (code) {
+    case "not-allowed":
+    case "service-not-allowed":
+      return "Microphone permission was denied. Please allow the microphone, or type your question.";
+    case "no-speech":
+      return "I did not hear anything. Please try again, or type your question.";
+    case "audio-capture":
+      return "No microphone was found. Please type your question instead.";
+    case "network":
+      return "Voice recognition needs an internet connection and could not reach its service. Please type your question instead.";
+    case "language-not-supported":
+      return "Voice recognition is not available for this language in this browser. Please type your question instead.";
+    default:
+      return "Voice input failed (" + code + "). Please type your question instead.";
+  }
+}
+
+function startListening() {
+  if (!SpeechRecognition) {
+    setStatus("Voice input is not supported in this browser. Please type your question.");
+    return;
+  }
+  if (listening) {
+    recognition.abort(); // second press cancels
+    return;
+  }
+  // Stop any spoken answer first, so the microphone does not hear it.
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+
+  recognition = new SpeechRecognition();
+  recognition.lang = RECOGNITION_LANG[languageEl.value] || "en-IN";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    listening = true;
+    voiceBtn.textContent = "Listening... (press V to cancel)";
+    setStatus("Listening. Ask your question now.");
+  };
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript.trim();
+    if (transcript) {
+      questionEl.value = transcript;
+      askForm.requestSubmit(); // ask straight away, no extra click needed
+    }
+  };
+  recognition.onerror = (event) => {
+    if (event.error === "aborted") return; // the user cancelled on purpose
+    setStatus(voiceErrorMessage(event.error));
+  };
+  recognition.onend = () => {
+    listening = false;
+    voiceBtn.textContent = "Ask by voice (press V)";
+  };
+
+  recognition.start();
+}
+
+if (!SpeechRecognition) {
+  voiceBtn.disabled = true;
+  voiceBtn.textContent = "Voice input is not supported in this browser";
+}
+
+voiceBtn.addEventListener("click", startListening);
+
+// Keyboard shortcut: press V anywhere (except while typing) to ask by voice.
+document.addEventListener("keydown", (event) => {
+  const tag = event.target.tagName;
+  if (
+    event.key.toLowerCase() === "v" &&
+    !event.ctrlKey && !event.altKey && !event.metaKey &&
+    tag !== "INPUT" && tag !== "SELECT" && tag !== "TEXTAREA"
+  ) {
+    event.preventDefault();
+    startListening();
+  }
+});
