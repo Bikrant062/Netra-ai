@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Netra AI</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Netra AI</h1>
+    <p>A bilingual visual assistant. Point the camera and ask what is around you.</p>
+  </header>
+
+  <main>
+    <section aria-label="Camera">
+      <video id="camera" autoplay playsinline muted
+             aria-label="Live camera view"></video>
+      <button id="cameraBtn" type="button">Start camera</button>
+    </section>
+
+    <p id="status" role="status" aria-live="polite">Camera is off.</p>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

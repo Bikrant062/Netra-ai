@@ -1,0 +1,56 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #101820;
+  color: #ffffff;
+  line-height: 1.5;
+}
+
+header,
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+h1 {
+  margin-bottom: 4px;
+}
+
+video {
+  width: 100%;
+  background: #000000;
+  border: 3px solid #ffd400;
+  border-radius: 8px;
+  aspect-ratio: 4 / 3;
+}
+
+button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 16px;
+  font-size: 1.25rem;
+  font-weight: bold;
+  background: #ffd400;
+  color: #101820;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 4px solid #ffffff;
+  outline-offset: 2px;
+}
+
+#status {
+  margin-top: 16px;
+  padding: 12px;
+  font-size: 1.1rem;
+  background: #1c2b3a;
+  border-radius: 8px;
+}
