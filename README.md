@@ -30,10 +30,16 @@ This is an informational assistant, not a navigation or collision-avoidance devi
 
 ## Run locally
 
+Requirements: Python 3.12 and, on Windows, the
+[Microsoft Visual C++ Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe)
+(onnxruntime crashes on import without it).
+
 ```bash
-python -m venv .venv
+py -3.12 -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r backend\requirements.txt
 cd backend
 uvicorn main:app --reload
 ```
+
+Then open http://127.0.0.1:8000
