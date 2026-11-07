@@ -7,6 +7,7 @@ const askBtn = document.getElementById("askBtn");
 const languageEl = document.getElementById("language");
 const questionEl = document.getElementById("question");
 const facingMeEl = document.getElementById("facingMe");
+const repeatBtn = document.getElementById("repeatBtn");
 
 let stream = null;
 
@@ -23,6 +24,7 @@ async function startCamera() {
     video.srcObject = stream;
     cameraBtn.textContent = "Stop camera";
     setStatus("Camera is on.");
+    startFrameBuffer();
   } catch (error) {
     stream = null;
     if (error.name === "NotAllowedError") {
@@ -42,6 +44,7 @@ function stopCamera() {
     stream.getTracks().forEach((track) => track.stop());
   }
   stream = null;
+  stopFrameBuffer();
   video.srcObject = null;
   cameraBtn.textContent = "Start camera";
   setStatus("Camera is off.");
@@ -92,10 +95,12 @@ askForm.addEventListener("submit", async (event) => {
   answerEl.textContent = "";
 
   try {
-    const frame = await captureFrame();
+        // Send the most recent frames; the server keeps the sharpest one.
+    let frames = recentFrames.slice();
+    if (frames.length === 0) frames = [await captureFrame()];
 
     const formData = new FormData();
-    formData.append("image", frame, "frame.jpg");
+    frames.forEach((f, i) => formData.append("images", f, "frame" + i + ".jpg"));
     formData.append("question", question);
     formData.append("language", languageEl.value);
     formData.append("facing_me", facingMeEl.checked ? "true" : "false");
@@ -108,6 +113,11 @@ askForm.addEventListener("submit", async (event) => {
 
     answerEl.textContent = data.answer;
     setStatus("Done.");
+    lastAnswer = data.answer;
+    lastLanguage = data.language;
+    repeatBtn.disabled = false;
+    speak(lastAnswer, lastLanguage);
+
     console.log("Server response:", data);
   } catch (error) {
     setStatus("Something went wrong: " + error.message);
@@ -121,3 +131,75 @@ function updateMirror() {
 }
 facingMeEl.addEventListener("change", updateMirror);
 updateMirror();
+// ---------- Spoken answers ----------
+let voices = [];
+let lastAnswer = "";
+let lastLanguage = "en";
+
+function loadVoices() {
+  voices = "speechSynthesis" in window ? speechSynthesis.getVoices() : [];
+}
+if ("speechSynthesis" in window) {
+  loadVoices();
+  speechSynthesis.addEventListener("voiceschanged", loadVoices);
+}
+
+function pickVoice(language) {
+  const prefix = language === "ne" ? "ne" : "en";
+  const matches = voices.filter((v) => v.lang.toLowerCase().startsWith(prefix));
+  // Prefer the higher-quality "Natural"/"Online" voices when there are any.
+  return matches.find((v) => /natural|online/i.test(v.name)) || matches[0] || null;
+}
+
+function speak(text, language) {
+  if (!("speechSynthesis" in window)) {
+    setStatus("Speech output is not supported in this browser. Please read the answer on screen.");
+    return;
+  }
+  speechSynthesis.cancel(); // stop anything still being spoken
+  const voice = pickVoice(language);
+  if (language === "ne" && !voice) {
+    setStatus("No Nepali voice was found on this device, so the answer is shown as text only.");
+    return;
+  }
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = voice ? voice.lang : "en-US";
+  if (voice) utterance.voice = voice;
+  utterance.rate = 0.95;
+  speechSynthesis.speak(utterance);
+}
+
+repeatBtn.addEventListener("click", () => {
+  if (lastAnswer) speak(lastAnswer, lastLanguage);
+});
+// ---------- Recent-frame buffer ----------
+const FRAME_BUFFER_SIZE = 5;   // keep the last 5 frames...
+const FRAME_INTERVAL_MS = 100; // ...captured every 0.1 s (about the last half second)
+let recentFrames = [];
+let bufferTimer = null;
+const bufferCanvas = document.createElement("canvas");
+
+function startFrameBuffer() {
+  stopFrameBuffer();
+  bufferTimer = setInterval(() => {
+    if (!stream || video.videoWidth === 0) return;
+    bufferCanvas.width = video.videoWidth;
+    bufferCanvas.height = video.videoHeight;
+    bufferCanvas.getContext("2d").drawImage(video, 0, 0);
+    bufferCanvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        recentFrames.push(blob);
+        if (recentFrames.length > FRAME_BUFFER_SIZE) recentFrames.shift();
+      },
+      "image/jpeg",
+      0.8
+    );
+  }, FRAME_INTERVAL_MS);
+}
+
+function stopFrameBuffer() {
+  if (bufferTimer) clearInterval(bufferTimer);
+  bufferTimer = null;
+  recentFrames = [];
+}

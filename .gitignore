@@ -5,3 +5,4 @@ __pycache__/
 .vscode/
 models/*.onnx
 test_images/
+debug/

@@ -104,3 +104,7 @@ select:focus-visible {
 video.mirrored {
   transform: scaleX(-1);
 }
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
