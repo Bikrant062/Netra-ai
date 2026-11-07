@@ -14,7 +14,7 @@ Built for INNEX 2026 (Healthcare & Accessibility track). No paid APIs and no ext
 - Rule-based question understanding in English and Nepali ("What is on my left?", "मेरो अगाडि के छ?")
 - Answers hedge when the detector is unsure ("something that looks like a bottle") and never claim an area is clear
 - Spoken answers and voice input (browser speech services), with a typed-question fallback
-- Keyboard shortcut: press **V** to ask by voice
+- Keyboard shortcut: press **spacebar** or **V** to ask by voice
 - Option for a user-facing camera: swaps left and right in the answers and mirrors the preview
 
 ## How it works
@@ -56,7 +56,7 @@ Open http://127.0.0.1:8000, click **Start camera**, and ask a question.
 
 ## Using it
 
-- Type a question and press **Ask**, or press **V** (or the voice button) and speak.
+- Type a question and press **Ask**, or press **spacebar** or **V** (or the voice button) and speak.
 - Choose **English** or **नेपाली** before asking.
 - If the laptop camera faces you, tick **The camera is facing me**. Without it, "left" and "right" are from the camera's point of view, which is correct when the camera points the way the user faces.
 
@@ -76,7 +76,7 @@ Open http://127.0.0.1:8000, click **Start camera**, and ask a question.
 
 ## Test results
 
-(Add your scene test table here: scene, question, result.)
+....
 
 ## Credits
 
