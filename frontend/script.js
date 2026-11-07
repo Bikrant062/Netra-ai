@@ -247,7 +247,7 @@ function startListening() {
 
   recognition.onstart = () => {
     listening = true;
-    voiceBtn.textContent = "Listening... (press V to cancel)";
+    voiceBtn.textContent = "Listening... (press Space to cancel)";
     setStatus("Listening. Ask your question now.");
   };
   recognition.onresult = (event) => {
@@ -263,7 +263,7 @@ function startListening() {
   };
   recognition.onend = () => {
     listening = false;
-    voiceBtn.textContent = "Ask by voice (press V)";
+    voiceBtn.textContent = "Ask by voice (press Space)";
   };
 
   recognition.start();
@@ -276,15 +276,20 @@ if (!SpeechRecognition) {
 
 voiceBtn.addEventListener("click", startListening);
 
-// Keyboard shortcut: press V anywhere (except while typing) to ask by voice.
+// Keyboard shortcuts: Space or V asks by voice (not while typing, or on the checkbox/dropdown).
+function isFormField(el) {
+  return ["INPUT", "SELECT", "TEXTAREA"].includes(el.tagName);
+}
+
 document.addEventListener("keydown", (event) => {
-  const tag = event.target.tagName;
-  if (
-    event.key.toLowerCase() === "v" &&
-    !event.ctrlKey && !event.altKey && !event.metaKey &&
-    tag !== "INPUT" && tag !== "SELECT" && tag !== "TEXTAREA"
-  ) {
-    event.preventDefault();
-    startListening();
+  if (event.ctrlKey || event.altKey || event.metaKey || isFormField(event.target)) return;
+  if (event.code === "Space" || event.key.toLowerCase() === "v") {
+    event.preventDefault(); // stops Space from scrolling the page or pressing a button
+    if (!event.repeat) startListening();
   }
+});
+
+// Some browsers "click" a focused button when Space is released, so block that too.
+document.addEventListener("keyup", (event) => {
+  if (event.code === "Space" && !isFormField(event.target)) event.preventDefault();
 });
