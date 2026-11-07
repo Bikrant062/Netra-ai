@@ -4,12 +4,13 @@ from pathlib import Path
 
 import cv2
 
+import detector as detector_module
 from detector import Detector
 
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python backend\\test_detector.py <image path>")
+        print("Usage: python backend\\test_detector.py <image path> [threshold]")
         return
 
     path = Path(sys.argv[1])
@@ -19,12 +20,13 @@ def main():
         return
     print(f"Image size: {image.shape[1]}x{image.shape[0]}")
 
-    start = time.perf_counter()
-    detector = Detector()
-    print(f"Model loaded in {time.perf_counter() - start:.2f} s")
+    if len(sys.argv) > 2:
+        detector_module.CONF_THRESHOLD = float(sys.argv[2])
+        print("Using confidence threshold", sys.argv[2])
 
+    detector = Detector()
     detections = []
-    for i in range(5):
+    for i in range(3):
         start = time.perf_counter()
         detections = detector.detect(image)
         print(f"Run {i + 1}: {(time.perf_counter() - start) * 1000:.0f} ms")
@@ -32,6 +34,7 @@ def main():
     print(f"\nFound {len(detections)} object(s):")
     for d in detections:
         print(f"  {d['name']}  {d['confidence']:.2f}  box={d['box']}")
+        print(f"      top guesses: {d['alternatives']}")
         x1, y1, x2, y2 = d["box"]
         cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 255), 2)
         label = f"{d['name']} {d['confidence']:.2f}"

@@ -98,6 +98,7 @@ class Detector:
         keep = confidences >= CONF_THRESHOLD
         if not keep.any():
             return []
+        class_scores = scores[keep]
         pred, class_ids, confidences = pred[keep], class_ids[keep], confidences[keep]
 
         # Centre/width/height -> corners, mapped back to the original image size.
@@ -114,11 +115,16 @@ class Detector:
             idx = np.where(class_ids == class_id)[0]
             for k in _nms(boxes[idx], confidences[idx], NMS_THRESHOLD):
                 j = idx[k]
+                top = class_scores[j].argsort()[::-1][:3]
                 detections.append(
                     {
                         "name": COCO_CLASSES[int(class_id)],
                         "confidence": round(float(confidences[j]), 2),
                         "box": [int(v) for v in boxes[j]],
+                        "alternatives": [
+                            (COCO_CLASSES[int(t)], round(float(class_scores[j][t]), 2))
+                            for t in top
+                        ],
                     }
                 )
         # Second pass: if two boxes of different types cover almost the same
