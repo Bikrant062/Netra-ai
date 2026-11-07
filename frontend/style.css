@@ -54,3 +54,37 @@ button:focus-visible {
   background: #1c2b3a;
   border-radius: 8px;
 }
+label {
+  display: block;
+  margin-top: 16px;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+input,
+select {
+  width: 100%;
+  margin-top: 6px;
+  padding: 14px;
+  font-size: 1.1rem;
+  background: #ffffff;
+  color: #101820;
+  border: 2px solid #ffd400;
+  border-radius: 8px;
+}
+
+input:focus-visible,
+select:focus-visible {
+  outline: 4px solid #ffffff;
+  outline-offset: 2px;
+}
+
+#answer {
+  margin-top: 12px;
+  padding: 12px;
+  font-size: 1.25rem;
+  font-weight: bold;
+  background: #1c2b3a;
+  border-radius: 8px;
+  min-height: 3rem;
+}

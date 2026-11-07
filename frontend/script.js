@@ -1,6 +1,11 @@
 const video = document.getElementById("camera");
 const cameraBtn = document.getElementById("cameraBtn");
 const statusEl = document.getElementById("status");
+const answerEl = document.getElementById("answer");
+const askForm = document.getElementById("askForm");
+const askBtn = document.getElementById("askBtn");
+const languageEl = document.getElementById("language");
+const questionEl = document.getElementById("question");
 
 let stream = null;
 
@@ -46,5 +51,65 @@ cameraBtn.addEventListener("click", () => {
     stopCamera();
   } else {
     startCamera();
+  }
+});
+
+// Grab the current video frame and return it as a JPEG file (Blob).
+function captureFrame() {
+  return new Promise((resolve, reject) => {
+    if (!stream || video.videoWidth === 0) {
+      reject(new Error("Camera is not ready."));
+      return;
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error("Could not capture the frame."))),
+      "image/jpeg",
+      0.8
+    );
+  });
+}
+
+askForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const question = questionEl.value.trim();
+  if (!question) {
+    setStatus("Please type a question first.");
+    return;
+  }
+  if (!stream) {
+    setStatus("Please start the camera first.");
+    return;
+  }
+
+  askBtn.disabled = true;
+  setStatus("Analyzing...");
+  answerEl.textContent = "";
+
+  try {
+    const frame = await captureFrame();
+
+    const formData = new FormData();
+    formData.append("image", frame, "frame.jpg");
+    formData.append("question", question);
+    formData.append("language", languageEl.value);
+
+    const response = await fetch("/analyze", { method: "POST", body: formData });
+    if (!response.ok) {
+      throw new Error("Server returned status " + response.status);
+    }
+    const data = await response.json();
+
+    answerEl.textContent = data.answer;
+    setStatus("Done.");
+    console.log("Server response:", data);
+  } catch (error) {
+    setStatus("Something went wrong: " + error.message);
+  } finally {
+    askBtn.disabled = false;
   }
 });

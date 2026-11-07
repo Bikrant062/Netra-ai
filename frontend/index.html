@@ -19,7 +19,23 @@
       <button id="cameraBtn" type="button">Start camera</button>
     </section>
 
+    <section aria-label="Ask a question">
+      <form id="askForm">
+        <label for="language">Language</label>
+        <select id="language">
+          <option value="en">English</option>
+          <option value="ne">नेपाली (Nepali)</option>
+        </select>
+
+        <label for="question">Your question</label>
+        <input id="question" type="text" value="What is in front of me?" autocomplete="off">
+
+        <button id="askBtn" type="submit">Ask</button>
+      </form>
+    </section>
+
     <p id="status" role="status" aria-live="polite">Camera is off.</p>
+    <p id="answer" role="status" aria-live="polite"></p>
   </main>
 
   <script src="script.js"></script>
