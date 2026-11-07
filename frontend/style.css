@@ -88,3 +88,19 @@ select:focus-visible {
   border-radius: 8px;
   min-height: 3rem;
 }
+.check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: normal;
+}
+
+.check input {
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+}
+video.mirrored {
+  transform: scaleX(-1);
+}

@@ -6,6 +6,7 @@ const askForm = document.getElementById("askForm");
 const askBtn = document.getElementById("askBtn");
 const languageEl = document.getElementById("language");
 const questionEl = document.getElementById("question");
+const facingMeEl = document.getElementById("facingMe");
 
 let stream = null;
 
@@ -97,6 +98,7 @@ askForm.addEventListener("submit", async (event) => {
     formData.append("image", frame, "frame.jpg");
     formData.append("question", question);
     formData.append("language", languageEl.value);
+    formData.append("facing_me", facingMeEl.checked ? "true" : "false");
 
     const response = await fetch("/analyze", { method: "POST", body: formData });
     if (!response.ok) {
@@ -113,3 +115,9 @@ askForm.addEventListener("submit", async (event) => {
     askBtn.disabled = false;
   }
 });
+// Mirror the preview when the camera is facing the user.
+function updateMirror() {
+  video.classList.toggle("mirrored", facingMeEl.checked);
+}
+facingMeEl.addEventListener("change", updateMirror);
+updateMirror();
