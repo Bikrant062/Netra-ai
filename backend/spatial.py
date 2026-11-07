@@ -37,3 +37,12 @@ def add_positions(detections, image_width):
         d["position"] = get_position(d["box"], image_width)
         d["regions"] = get_regions(d["box"], image_width)
     return detections
+SWAP = {"left": "right", "center": "center", "right": "left"}
+
+
+def mirror_positions(detections):
+    """For a camera that faces the user: swap left and right in every detection."""
+    for d in detections:
+        d["position"] = SWAP[d["position"]]
+        d["regions"] = [SWAP[r] for r in d["regions"]]
+    return detections

@@ -1,11 +1,22 @@
+import time
 from pathlib import Path
 
-from fastapi import FastAPI, File, Form, UploadFile
+import cv2
+import numpy as np
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.staticfiles import StaticFiles
+
+from assistant import answer_question
+from detector import Detector
+from spatial import add_positions, mirror_positions
 
 app = FastAPI(title="Netra AI")
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+MAX_IMAGE_BYTES = 5 * 1024 * 1024  # reject uploads over 5 MB
+
+# Load the model once, when the server starts (not on every request).
+detector = Detector()
 
 
 @app.get("/health")
@@ -14,26 +25,51 @@ def health():
 
 
 @app.post("/analyze")
-async def analyze(
+def analyze(
     image: UploadFile = File(...),
     question: str = Form(...),
     language: str = Form("en"),
+    facing_me: bool = Form(False),
 ):
-    image_bytes = await image.read()
-    size_kb = round(len(image_bytes) / 1024, 1)
-    print(f"Received {size_kb} KB image, language={language}, question={question!r}")
+    data = image.file.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="The uploaded image is empty.")
+    if len(data) > MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=413, detail="The image is too large.")
 
-    # Placeholder answer. Real detection comes in Phase 4.
-    if language == "ne":
-        answer = f"मैले {size_kb} KB को तस्बिर पाएँ। वस्तु पहिचान चाँडै थपिनेछ।"
-    else:
-        answer = f"I received your {size_kb} KB image. Object detection is not added yet."
+    # Decode the JPEG in memory. Nothing is written to disk.
+    frame = cv2.imdecode(np.frombuffer(data, dtype=np.uint8), cv2.IMREAD_COLOR)
+    if frame is None:
+        raise HTTPException(status_code=400, detail="Could not read the image.")
+
+    if language not in ("en", "ne"):
+        language = "en"
+
+    start = time.perf_counter()
+    detections = detector.detect(frame)
+    detect_ms = round((time.perf_counter() - start) * 1000)
+
+    detections = add_positions(detections, frame.shape[1])
+    if facing_me:
+        detections = mirror_positions(detections)
+    answer = answer_question(question, language, detections)
+
+    names = [f"{d['name']}({d['position']}, {d['confidence']})" for d in detections]
+    print(f"Detected {len(detections)} object(s) in {detect_ms} ms: {names}")
 
     return {
         "answer": answer,
         "language": language,
         "question": question,
-        "objects": [],
+        "objects": [
+            {
+                "name": d["name"],
+                "confidence": d["confidence"],
+                "position": d["position"],
+                "regions": d["regions"],
+            }
+            for d in detections
+        ],
     }
 
 
